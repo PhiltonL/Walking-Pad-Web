@@ -1,0 +1,105 @@
+/* Nur für die App (index.html); Basis steht in base.css */
+body.app { padding-bottom: env(safe-area-inset-bottom); }
+.demo { background: var(--warn); color: #fff; text-align: center; font-size: 13px; padding: 6px 12px; }
+
+main { max-width: 760px; margin: 0 auto; padding: 8px 16px calc(100px + env(safe-area-inset-bottom)); }
+.view, #liveCard { display: grid; gap: 14px; }
+
+/* Navigation unten */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.nav-inner { max-width: 760px; margin: 0 auto; display: flex; }
+.nav button {
+  flex: 1; display: grid; justify-items: center; gap: 2px; padding: 9px 4px 10px; background: none; border: 0;
+  color: var(--muted); font: inherit; font-size: 11px; cursor: pointer;
+}
+.nav button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nav button[aria-selected="true"] { color: var(--accent); font-weight: 700; }
+
+.card.center { text-align: center; padding: 28px 16px; }
+.icon-big { font-size: 56px; line-height: 1; }
+.lead { font-size: 17px; margin: 12px 0 18px; }
+.notice { background: var(--soft); border-radius: 14px; padding: 12px; font-size: 14px; margin-bottom: 14px; text-align: left; }
+.stack { display: grid; gap: 8px; justify-items: center; }
+.stack .btn.big { min-width: 240px; }
+
+/* Tempo-Banner */
+.hero {
+  position: relative; overflow: hidden; border-radius: 24px; padding: 16px 18px 80px; color: #fff;
+  background: linear-gradient(160deg, var(--hero-a), var(--hero-b));
+}
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.state { font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 99px; background: rgba(255, 255, 255, .2); }
+.avg { font-size: 13px; opacity: .8; }
+.hero-speed { font-size: clamp(60px, 20vw, 96px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.hero-speed .unit { font-size: 18px; font-weight: 600; color: rgba(255, 255, 255, .85); }
+.spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 64px; opacity: .5; }
+.spark path { fill: #fff; }
+.countdown {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: 120px; font-weight: 800; color: #fff;
+  background: rgba(8, 24, 70, .82);
+}
+
+/* Messwerte */
+.tiles.live { display: flex; flex-wrap: wrap; gap: 10px; }
+.tiles.live .tile { flex: 1 1 calc(33.333% - 7px); min-width: 0; text-align: center; padding: 10px 8px; }
+.tiles.live .tile .v { font-size: 22px; }
+@media (min-width: 640px) { .tiles.live .tile { flex-basis: calc(20% - 8px); } }
+.tiles.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 520px) {
+  .tiles.three { grid-template-columns: 1fr; gap: 10px; }
+  .tiles.three .tile { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 12px; }
+  .tiles.three .tile .sub { grid-column: 1 / -1; }
+}
+
+/* Steuerung */
+.speedcard { display: grid; gap: 12px; padding: 14px; }
+.speedrow { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.target { font-size: 30px; font-weight: 700; min-width: 150px; text-align: center; font-variant-numeric: tabular-nums; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.presets:empty { display: none; }
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+
+.mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.mini .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Verlauf */
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.list button {
+  width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; text-align: left; font: inherit; color: inherit;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; cursor: pointer;
+}
+.list button:hover { border-color: var(--accent); }
+.list .when { font-weight: 600; }
+.list .dist { font-size: 20px; font-weight: 700; grid-row: span 2; align-self: center; font-variant-numeric: tabular-nums; }
+.list .meta { font-size: 13px; color: var(--muted); }
+
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; }
+#detailChart { padding-top: 30px; }
+#detailChart svg { touch-action: pan-y; cursor: crosshair; }
+.chart .cursor line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .cursor circle { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
+.tip {
+  position: absolute; top: 0; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  background: var(--fg); color: var(--bg); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 10px;
+}
+.chart .bar { fill: var(--accent); }
+.chart .bar.empty { fill: var(--line); }
+.chart .bar.today { opacity: .75; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .area { fill: var(--soft); }
+.chart .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+
+/* Dialog und Hinweis */
+dialog { border: 1px solid var(--line); border-radius: 24px; background: var(--card); color: var(--fg); padding: 18px; width: min(560px, calc(100vw - 24px)); }
+dialog::backdrop { background: rgba(0, 0, 0, .5); }
+dialog .tile .v { font-size: 22px; }
+dialog h2 { text-transform: none; letter-spacing: 0; font-size: 18px; color: var(--fg); margin-bottom: 12px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--fg); color: var(--bg); padding: 12px 16px; border-radius: 16px; display: flex; gap: 14px; align-items: center;
+  max-width: calc(100vw - 24px); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); z-index: 10;
+}
+.toast button { font: inherit; font-weight: 700; background: none; border: 0; color: var(--accent); cursor: pointer; filter: brightness(1.3); }

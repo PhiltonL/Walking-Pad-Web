@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walking Pad – Entwickleransicht</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%9A%B6%3C/text%3E%3C/svg%3E">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="debug.css">
+</head>
+<body class="debug">
+<header class="top">
+  <a class="back" href="index.html" aria-label="Zurück zur App" title="Zurück zur App">←</a>
+  <h1>Entwickleransicht</h1>
+  <span id="status" class="chip">getrennt</span>
+</header>
+<div class="toolbar">
+  <label class="chk"><input type="checkbox" id="allDevices"> alle Geräte anzeigen</label>
+  <button id="btnConnect" class="primary">Verbinden</button>
+  <button id="btnDisconnect" disabled>Trennen</button>
+</div>
+
+<main>
+  <section id="unsupported" class="card" hidden>
+    <strong>Web Bluetooth ist nicht verfügbar.</strong>
+    <p class="muted">Bitte Chrome, Edge oder Opera auf dem Computer oder auf Android verwenden. Lokal die Seite über <code>http://localhost</code> öffnen (nicht <code>file://</code>).</p>
+  </section>
+
+  <section class="tiles">
+    <div class="tile"><div class="k">Status</div><div class="v" id="t-state">–</div></div>
+    <div class="tile"><div class="k">Geschwindigkeit</div><div><span class="v" id="t-speed">–</span><span class="u">km/h</span></div></div>
+    <div class="tile"><div class="k">Strecke</div><div><span class="v" id="t-distance">–</span><span class="u">km</span></div></div>
+    <div class="tile"><div class="k">Zeit</div><div class="v" id="t-time">–</div></div>
+    <div class="tile"><div class="k">Kalorien</div><div><span class="v" id="t-calories">–</span><span class="u">kcal</span></div></div>
+    <div class="tile"><div class="k">Schritte</div><div class="v" id="t-steps">–</div></div>
+    <div class="tile"><div class="k">Puls</div><div><span class="v" id="t-heartRate">–</span><span class="u">bpm</span></div></div>
+    <div class="tile"><div class="k">Steigung</div><div><span class="v" id="t-incline">–</span><span class="u" id="t-incline-u"></span></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Steuerung</h2>
+    <div class="row">
+      <button id="btnStart" class="big primary" disabled>Start</button>
+      <button id="btnPause" class="big" disabled>Pause</button>
+      <button id="btnStop" class="big" disabled>Stop</button>
+      <span class="muted" style="margin-left:auto">Steuern über
+        <select id="driverSelect" disabled></select>
+      </span>
+    </div>
+    <div class="row">
+      <button data-ds="-0.5" class="spd" disabled>−0.5</button>
+      <button data-ds="-0.1" class="spd" disabled>−0.1</button>
+      <div class="speed"><span id="targetSpeed">1.0</span><span class="u"> km/h</span></div>
+      <button data-ds="0.1" class="spd" disabled>+0.1</button>
+      <button data-ds="0.5" class="spd" disabled>+0.5</button>
+      <input type="range" id="speedRange" min="0.5" max="6" step="0.1" value="1" disabled>
+    </div>
+    <div class="row" id="presets"></div>
+    <div class="row" id="inclineRow" hidden>
+      <span class="muted">Steigung</span>
+      <button id="inclDown">−</button>
+      <span id="targetIncline" class="speed" style="font-size:20px;min-width:60px">0</span>
+      <button id="inclUp">+</button>
+    </div>
+    <div class="row" id="extras"></div>
+    <p class="muted" id="ctrlHint">Bei FitShow-Geräten nimmt das Band Geschwindigkeitsbefehle nur im Status „running“ an.</p>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Alle dekodierten Werte</h2>
+      <div id="fields"><p class="muted">Noch keine Daten.</p></div>
+    </div>
+    <div class="card">
+      <h2>Geräteinfo</h2>
+      <div id="info"><p class="muted">Nicht verbunden.</p></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Aufzeichnung</h2>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="record"> Aufzeichnen (1 Zeile/s)</label>
+      <span class="muted" id="recCount">0 Zeilen</span>
+      <button id="btnCsv">CSV exportieren</button>
+      <button id="btnRecClear">Leeren</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>GATT-Struktur</h2>
+    <pre id="gatt" class="gatt muted">–</pre>
+  </section>
+
+  <section class="card">
+    <h2>Raw-Befehl &amp; Log</h2>
+    <div class="row">
+      <select id="rawChar"></select>
+      <select id="rawFrame">
+        <option value="none">roh</option>
+        <option value="fitshow">FitShow-Frame (02 … xor 03)</option>
+        <option value="eway">Eway-Frame (F0 cmd len … sum)</option>
+      </select>
+      <input type="text" id="rawHex" placeholder="z. B. 51  oder  c3 00 00 00" style="flex:1;min-width:180px">
+      <button id="btnRaw" disabled>Senden</button>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="dedupe" checked> identische Wiederholungen ausblenden</label>
+      <label class="chk"><input type="checkbox" id="autoscroll" checked> Autoscroll</label>
+      <button id="btnLogClear">Log leeren</button>
+      <button id="btnLogSave">Log speichern</button>
+    </div>
+    <div class="row"><pre id="log" style="width:100%"></pre></div>
+  </section>
+</main>
+
+<script type="module" src="debug.js"></script>
+</body>
+</html>

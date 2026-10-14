@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Walking Pad</title>
+<meta name="description" content="Walking Pad per Bluetooth steuern und Trainings aufzeichnen – direkt im Browser, ohne Konto und ohne Server.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%9A%B6%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+<div id="demoBanner" class="demo" hidden>Demo-Modus – simuliertes Laufband, es wird nichts am echten Gerät gesteuert</div>
+
+<header class="top">
+  <h1 id="viewTitle">Training</h1>
+  <div id="chip" class="chip" data-status="idle"><span id="chipText">Nicht verbunden</span></div>
+</header>
+
+<main>
+  <!-- ======================================================= TRAINING -->
+  <section id="view-train" class="view">
+    <div id="connectCard" class="card center">
+      <div class="icon-big" aria-hidden="true">🚶</div>
+      <p id="connectMsg" class="lead"></p>
+      <div id="unsupported" class="notice" hidden>
+        Dieser Browser unterstützt kein Web Bluetooth. Bitte Chrome, Edge oder Opera auf dem Computer oder auf Android verwenden. Safari, Firefox und iPhone/iPad werden nicht unterstützt.
+      </div>
+      <div class="stack">
+        <button id="btnConnect" class="btn primary big">Laufband verbinden</button>
+        <button id="btnCancel" class="btn" hidden>Abbrechen</button>
+        <button id="btnConnectOther" class="btn link" hidden>Anderes Gerät wählen</button>
+      </div>
+      <p id="autoHint" class="muted small" hidden>Dieser Browser kann sich nicht ohne Klick verbinden. Ein Tipp auf „Verbinden“ genügt, es wird nur dein gespeichertes Gerät angeboten.</p>
+    </div>
+
+    <div id="liveCard" hidden>
+      <div class="hero">
+        <div class="hero-top">
+          <span id="stateLabel" class="state">Bereit</span>
+          <span id="avgSpeed" class="avg"></span>
+        </div>
+        <div class="hero-speed"><span id="mSpeed">0,0</span><span class="unit">km/h</span></div>
+        <svg id="spark" class="spark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div id="countdown" class="countdown" hidden></div>
+      </div>
+
+      <div class="tiles live">
+        <div class="tile"><div class="k">Zeit</div><div class="v" id="mTime">00:00</div></div>
+        <div class="tile"><div class="k">Strecke km</div><div class="v" id="mDist">0,00</div></div>
+        <div class="tile"><div class="k">kcal</div><div class="v" id="mKcal">0</div></div>
+        <div class="tile" id="tileSteps"><div class="k" id="stepsLabel">Schritte (ca.)</div><div class="v" id="mSteps">0</div></div>
+        <div class="tile" id="tileHr"><div class="k">Puls bpm</div><div class="v" id="mHr">–</div></div>
+      </div>
+
+      <div id="speedBox" class="card speedcard">
+        <div class="speedrow">
+          <button class="btn round" id="spdDown" aria-label="Langsamer">−</button>
+          <div class="target"><span id="targetSpeed">1,0</span><span class="unit">km/h</span></div>
+          <button class="btn round" id="spdUp" aria-label="Schneller">+</button>
+        </div>
+        <input type="range" id="speedRange" min="1" max="6" step="0.1" value="1" aria-label="Zielgeschwindigkeit">
+        <div id="presets" class="presets"></div>
+      </div>
+
+      <div id="inclineBox" class="card speedcard" hidden>
+        <div class="speedrow">
+          <button class="btn round" id="incDown" aria-label="Weniger Steigung">−</button>
+          <div class="target"><span id="targetIncline">0</span><span class="unit">% Steigung</span></div>
+          <button class="btn round" id="incUp" aria-label="Mehr Steigung">+</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnStart" class="btn primary big">Start</button>
+        <button id="btnResume" class="btn primary big" hidden>Weiter</button>
+        <button id="btnPause" class="btn big" hidden>Pause</button>
+        <button id="btnStop" class="btn danger big" hidden>Stop</button>
+      </div>
+    </div>
+
+    <div class="card" id="todayCard">
+      <h2>Heute</h2>
+      <div class="mini">
+        <div><div class="v" id="todayDist">0,00</div><div class="k">km</div></div>
+        <div><div class="v" id="todayTime">00:00</div><div class="k">Zeit</div></div>
+        <div><div class="v" id="todayKcal">0</div><div class="k">kcal</div></div>
+        <div><div class="v" id="todayCount">0</div><div class="k">Trainings</div></div>
+      </div>
+      <p id="lastRun" class="muted small" hidden></p>
+    </div>
+  </section>
+
+  <!-- ======================================================= VERLAUF -->
+  <section id="view-history" class="view" hidden>
+    <div class="tiles three">
+      <div class="tile"><div class="k">Diese Woche</div><div class="v"><span id="wDist">0</span><span class="u">km</span></div><div class="sub" id="wSub"></div></div>
+      <div class="tile"><div class="k">Dieser Monat</div><div class="v"><span id="mDistM">0</span><span class="u">km</span></div><div class="sub" id="mSub"></div></div>
+      <div class="tile"><div class="k">Gesamt</div><div class="v"><span id="tDist">0</span><span class="u">km</span></div><div class="sub" id="tSub"></div></div>
+    </div>
+    <div class="card">
+      <h2>Letzte 14 Tage</h2>
+      <div id="barChart" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>Trainings</h2>
+      <p id="emptyHistory" class="muted">Noch keine Trainings. Starte ein Training – es wird automatisch aufgezeichnet.</p>
+      <ul id="workoutList" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- ======================================================= EINSTELLUNGEN -->
+  <section id="view-settings" class="view" hidden>
+    <div class="card">
+      <h2>Funktionen meines Laufbands</h2>
+      <p class="muted small">Was hier ausgeschaltet ist, wird in der App nicht mehr angezeigt.</p>
+      <label class="switch"><input type="checkbox" data-setting="features.speedControl"><span>Geschwindigkeit steuern</span></label>
+      <label class="switch"><input type="checkbox" data-setting="features.presets"><span>Tempo-Voreinstellungen</span></label>
+      <label class="switch"><input type="checkbox" data-setting="features.pause"><span>Pause-Taste</span></label>
+      <label class="switch"><input type="checkbox" data-setting="features.incline"><span>Steigung (Incline)</span></label>
+      <label class="switch"><input type="checkbox" data-setting="features.heartRate"><span>Puls anzeigen</span></label>
+      <label class="switch"><input type="checkbox" data-setting="features.steps"><span>Schritte anzeigen</span></label>
+    </div>
+
+    <div class="card">
+      <h2>Tempo</h2>
+      <label class="field"><span>Tempolimit in der App (km/h, leer = Gerätemaximum)</span>
+        <input type="number" data-setting="speedLimit" min="1" max="20" step="0.1" inputmode="decimal" placeholder="z. B. 5">
+      </label>
+      <label class="field"><span>Schrittweite der +/− Tasten</span>
+        <select data-setting="speedStep" data-type="number"><option value="0.1">0,1 km/h</option><option value="0.5">0,5 km/h</option><option value="1">1,0 km/h</option></select>
+      </label>
+      <label class="field"><span>Voreinstellungen (km/h, durch Komma getrennt)</span>
+        <input type="text" data-setting="presets" data-type="list" placeholder="2, 3, 4, 5">
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>Körper</h2>
+      <label class="field"><span>Schrittlänge in cm – für die Schrittschätzung, da das Band keine Schritte meldet</span>
+        <input type="number" data-setting="stepLengthCm" min="30" max="120" step="1" inputmode="numeric">
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>Verbindung</h2>
+      <p class="muted">Gespeichertes Gerät: <strong id="savedDevice">keins</strong></p>
+      <label class="switch"><input type="checkbox" data-setting="autoConnect"><span>Beim Öffnen automatisch verbinden</span></label>
+      <label class="switch"><input type="checkbox" data-setting="keepAwake"><span>Bildschirm während des Trainings anlassen</span></label>
+      <div class="row">
+        <button class="btn" id="btnDisconnect">Verbindung trennen</button>
+        <button class="btn danger" id="btnForget">Gerät vergessen</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Daten</h2>
+      <p class="muted small">Alle Trainings liegen nur in diesem Browser. Exportiere sie regelmäßig als Sicherung. Eine FIT-Datei für Garmin Connect, Strava und Co. gibt es pro Training in der Detailansicht (Verlauf → Training antippen).</p>
+      <div class="row">
+        <button class="btn" id="btnExportJson">Export (JSON)</button>
+        <button class="btn" id="btnExportCsv">Export (CSV)</button>
+        <label class="btn">Import (JSON)<input type="file" id="fileImport" accept="application/json,.json" hidden></label>
+        <button class="btn danger" id="btnDeleteAll">Alle löschen</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Mehr</h2>
+      <p><a href="?demo">Demo-Modus ausprobieren</a> · <a href="debug.html">Entwickleransicht (Logs &amp; Rohdaten)</a></p>
+    </div>
+  </section>
+</main>
+
+<nav class="nav" aria-label="Bereiche">
+  <div class="nav-inner" role="tablist">
+    <button role="tab" id="tab-train" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>Training
+    </button>
+    <button role="tab" id="tab-history" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Verlauf
+    </button>
+    <button role="tab" id="tab-settings" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Einstellungen
+    </button>
+  </div>
+</nav>
+
+<dialog id="detail">
+  <h2 id="detailTitle"></h2>
+  <div class="tiles" id="detailTiles"></div>
+  <h3>Tempo</h3>
+  <div id="detailChart" class="chart"></div>
+  <p id="chartHint" class="muted small">Fahre mit der Maus über das Diagramm oder tippe darauf, um Tempo und Strecke zu einem Zeitpunkt zu sehen.</p>
+  <div class="row end">
+    <button class="btn danger" id="detailDelete">Löschen</button>
+    <button class="btn" id="detailFit">FIT exportieren</button>
+    <button class="btn primary" id="detailClose" autofocus>Schließen</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
